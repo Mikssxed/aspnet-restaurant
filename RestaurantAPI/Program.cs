@@ -23,6 +23,9 @@ builder.Services.AddDbContext<RestaurantDbContext>(options =>
     .UseSqlServer(connectionString);
 });
 
+builder.Services.AddAutoMapper(typeof(RestaurantMappingProfile));
+
+
 var app = builder.Build();
 
 using var scope = app.Services.CreateScope();
