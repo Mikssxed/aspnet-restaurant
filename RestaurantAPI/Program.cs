@@ -1,8 +1,14 @@
 using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
+using NLog;
+using NLog.Web;
 using RestaurantAPI;
 using RestaurantAPI.Entities;
+using RestaurantAPI.Middleware;
 using RestaurantAPI.Services;
+
+// var logger = LogManager.Setup().LoadConfigurationFromAppSettings().GetCurrentClassLogger();
+// logger.Debug("init main");
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,6 +17,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+// builder.Logging.ClearProviders();
+builder.Host.UseNLog();
 
 builder.Services.Configure<Microsoft.AspNetCore.Http.Json.JsonOptions>(options =>
 {
@@ -26,6 +35,8 @@ builder.Services.AddDbContext<RestaurantDbContext>(options =>
 
 builder.Services.AddAutoMapper(typeof(RestaurantMappingProfile));
 builder.Services.AddScoped<IRestaurantService, RestaurantService>();
+builder.Services.AddScoped<ErrorHandlingMiddleware>();
+builder.Services.AddScoped<RequestTimeoutMiddleware>();
 
 var app = builder.Build();
 
@@ -41,7 +52,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-
+app.UseMiddleware<ErrorHandlingMiddleware>();
+app.UseMiddleware<RequestTimeoutMiddleware>();
 app.UseHttpsRedirection();
 
 app.UseAuthorization();
