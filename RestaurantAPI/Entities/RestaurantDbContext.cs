@@ -15,6 +15,8 @@ namespace RestaurantAPI.Entities
         public DbSet<Restaurant> Restaurants { get; set; }
         public DbSet<Address> Addresses { get; set; }
         public DbSet<Dish> Dishes { get; set; }
+        public DbSet<User> Users { get; set; }
+        public DbSet<Role> Roles { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -40,6 +42,16 @@ namespace RestaurantAPI.Entities
             {
                 a.Property(address => address.City).IsRequired().HasMaxLength(50);
                 a.Property(address => address.Street).IsRequired().HasMaxLength(50);
+            });
+
+            modelBuilder.Entity<User>(u =>
+            {
+                u.Property(user => user.Email).IsRequired();
+            });
+
+            modelBuilder.Entity<Role>(r =>
+            {
+                r.Property(role => role.Name).IsRequired();
             });
         }
     }

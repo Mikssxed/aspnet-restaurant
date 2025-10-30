@@ -44,6 +44,19 @@ namespace RestaurantAPI
                     context.Restaurants.AddRange(restaurantList);
                     context.SaveChanges();
                 }
+
+                if (!context.Roles.Any())
+                {
+                    var roles = new List<Role>
+                    {
+                        new Role { Name = "User" },
+                        new Role { Name = "Manager" },
+                        new Role { Name = "Admin" }
+                    };
+
+                    context.Roles.AddRange(roles);
+                    context.SaveChanges();
+                }
             }
         }
     }
