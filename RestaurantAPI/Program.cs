@@ -35,6 +35,7 @@ builder.Services.AddDbContext<RestaurantDbContext>(options =>
 
 builder.Services.AddAutoMapper(typeof(RestaurantMappingProfile));
 builder.Services.AddScoped<IRestaurantService, RestaurantService>();
+builder.Services.AddScoped<IDishService, DishService>();
 builder.Services.AddScoped<ErrorHandlingMiddleware>();
 builder.Services.AddScoped<RequestTimeoutMiddleware>();
 
