@@ -59,6 +59,13 @@ builder.Services.AddAuthentication(options =>
         IssuerSigningKey = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(authenticationSettings.JwtKey))
     };
 });
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("HasNationality", builder =>
+    {
+        builder.RequireClaim("Nationality", "Polish");
+    });
+});
 
 builder.Services.AddAutoMapper(typeof(RestaurantMappingProfile));
 builder.Services.AddScoped<IRestaurantService, RestaurantService>();
