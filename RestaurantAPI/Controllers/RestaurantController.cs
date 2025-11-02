@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
@@ -24,7 +25,7 @@ namespace RestaurantAPI.Controllers
             _restaurantService = restaurantService;
         }
         [HttpGet]
-        [Authorize(Policy = "HasNationality")]
+        [Authorize(Policy = "CreatedAtLeast2Restaurants")]
         public ActionResult<IEnumerable<RestaurantDto>> GetAll()
         {
             var restaurants = _restaurantService.GetAll();
