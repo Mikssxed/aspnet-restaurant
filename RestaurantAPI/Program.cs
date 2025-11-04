@@ -1,11 +1,12 @@
+using System.Text;
 using System.Text.Json.Serialization;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.Json;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using NLog;
 using NLog.Web;
 using RestaurantAPI;
 using RestaurantAPI.Authorization;
@@ -30,16 +31,13 @@ builder.Services.AddFluentValidationAutoValidation().AddFluentValidationClientsi
 // builder.Logging.ClearProviders();
 builder.Host.UseNLog();
 
-builder.Services.Configure<Microsoft.AspNetCore.Http.Json.JsonOptions>(options =>
-{
-    options.SerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
-});
+builder.Services.Configure<JsonOptions>(options => { options.SerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles; });
 
 builder.Services.AddDbContext<RestaurantDbContext>(options =>
 {
     var connectionString = builder.Configuration.GetConnectionString("RestaurantDbConnectionString");
     options
-    .UseSqlServer(connectionString);
+        .UseSqlServer(connectionString);
 });
 
 var authenticationSettings = new AuthenticationSettings();
@@ -58,25 +56,16 @@ builder.Services.AddAuthentication(options =>
     {
         ValidIssuer = authenticationSettings.JwtIssuer,
         ValidAudience = authenticationSettings.JwtIssuer,
-        IssuerSigningKey = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(authenticationSettings.JwtKey))
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(authenticationSettings.JwtKey))
     };
 });
 builder.Services.AddAuthorization(options =>
 {
-    options.AddPolicy("HasNationality", builder =>
-    {
-        builder.RequireClaim("Nationality", "Polish");
-    });
+    options.AddPolicy("HasNationality", builder => { builder.RequireClaim("Nationality", "Polish"); });
 
-    options.AddPolicy("Atleast20", builder =>
-    {
-        builder.AddRequirements(new MinimumAgeRequirement(20));
-    });
+    options.AddPolicy("Atleast20", builder => { builder.AddRequirements(new MinimumAgeRequirement(20)); });
 
-    options.AddPolicy("CreatedAtLeast2Restaurants", builder =>
-    {
-        builder.AddRequirements(new CreatedMultipleRestaurantsRequirement(2));
-    });
+    options.AddPolicy("CreatedAtLeast2Restaurants", builder => { builder.AddRequirements(new CreatedMultipleRestaurantsRequirement(2)); });
 });
 
 builder.Services.AddScoped<IAuthorizationHandler, ResourceOperationRequirementHandler>();
@@ -93,11 +82,20 @@ builder.Services.AddScoped<IUserContextService, UserContextService>();
 builder.Services.AddScoped<IValidator<RegisterUserDto>, RegisterUserDtoValidator>();
 builder.Services.AddScoped<IValidator<RestaurantQuery>, RestaurantQueryValidator>();
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("FrontEndClient", buil =>
+        buil.AllowAnyMethod()
+            .AllowAnyHeader()
+            .WithOrigins(builder.Configuration["AllowedOrigins"]));
+});
 var app = builder.Build();
+app.UseResponseCaching();
+app.UseStaticFiles();
 
 using var scope = app.Services.CreateScope();
 var dbContext = scope.ServiceProvider.GetService<RestaurantDbContext>();
-
+app.UseCors("FrontEndClient");
 RestaurantSeeder.Seed(dbContext);
 
 // Configure the HTTP request pipeline.
@@ -107,6 +105,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
 app.UseMiddleware<ErrorHandlingMiddleware>();
 app.UseMiddleware<RequestTimeoutMiddleware>();
 app.UseAuthentication();
