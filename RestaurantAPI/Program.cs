@@ -90,6 +90,7 @@ builder.Services.AddCors(options =>
             .WithOrigins(builder.Configuration["AllowedOrigins"]));
 });
 var app = builder.Build();
+Console.WriteLine($"App started, environment: {app.Environment.EnvironmentName}");
 app.UseResponseCaching();
 app.UseStaticFiles();
 
@@ -100,11 +101,8 @@ RestaurantSeeder.Seed(dbContext);
 
 // Configure the HTTP request pipeline.
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+app.UseSwagger();
+app.UseSwaggerUI();
 
 app.UseMiddleware<ErrorHandlingMiddleware>();
 app.UseMiddleware<RequestTimeoutMiddleware>();
@@ -115,4 +113,12 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-app.Run();
+try
+{
+    app.Run();
+}
+catch (Exception ex)
+{
+    Console.WriteLine("Fatal error on startup: " + ex.ToString());
+    throw;
+}

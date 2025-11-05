@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Bogus;
+using Microsoft.EntityFrameworkCore;
 using RestaurantAPI.Entities;
 
 namespace RestaurantAPI
@@ -14,6 +15,13 @@ namespace RestaurantAPI
         {
             if (context.Database.CanConnect())
             {
+                var pendingMigrations = context.Database.GetPendingMigrations();
+
+                if (pendingMigrations != null && pendingMigrations.Any())
+                {
+                    context.Database.Migrate();
+                }
+
                 if (!context.Restaurants.Any())
                 {
                     var dishGenerator = new Faker<Dish>()
