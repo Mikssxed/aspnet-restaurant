@@ -1,68 +1,61 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Claims;
-using System.Threading.Tasks;
-using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using RestaurantAPI.Entities;
 using RestaurantAPI.Models;
 using RestaurantAPI.Services;
 
-namespace RestaurantAPI.Controllers
+namespace RestaurantAPI.Controllers;
+
+[Route("api/restaurant")]
+[ApiController]
+[Authorize]
+public class RestaurantController : ControllerBase
 {
-    [Route("api/restaurant")]
-    [ApiController]
-    [Authorize]
-    public class RestaurantController : ControllerBase
+    private readonly IRestaurantService _restaurantService;
+
+    public RestaurantController(IRestaurantService restaurantService)
     {
-        private readonly IRestaurantService _restaurantService;
+        _restaurantService = restaurantService;
+    }
 
-        public RestaurantController(IRestaurantService restaurantService)
-        {
-            _restaurantService = restaurantService;
-        }
-        [HttpGet]
-        [Authorize(Policy = "CreatedAtLeast2Restaurants")]
-        public ActionResult<IEnumerable<RestaurantDto>> GetAll([FromQuery] RestaurantQuery query)
-        {
-            var restaurants = _restaurantService.GetAll(query);
-            return Ok(restaurants);
-        }
-        [AllowAnonymous]
-        [HttpGet("{id}")]
-        public ActionResult<RestaurantDto> GetById([FromRoute] int id)
-        {
-            var restaurant = _restaurantService.GetById(id);
+    [HttpGet]
+    // [Authorize(Policy = "CreatedAtLeast2Restaurants")]
+    public ActionResult<IEnumerable<RestaurantDto>> GetAll([FromQuery] RestaurantQuery query)
+    {
+        var restaurants = _restaurantService.GetAll(query);
+        return Ok(restaurants);
+    }
 
-            return Ok(restaurant);
-        }
+    [AllowAnonymous]
+    [HttpGet("{id}")]
+    public ActionResult<RestaurantDto> GetById([FromRoute] int id)
+    {
+        var restaurant = _restaurantService.GetById(id);
 
-        [HttpPost]
-        [Authorize(Roles = "Admin,Manager")]
-        public ActionResult CreateRestaurant([FromBody] CreateRestaurantDto dto)
-        {
-            var id = _restaurantService.CreateRestaurant(dto);
+        return Ok(restaurant);
+    }
 
-            return CreatedAtAction(nameof(GetById), new { id }, null);
-        }
+    [HttpPost]
+    [Authorize(Roles = "Admin,Manager")]
+    public ActionResult CreateRestaurant([FromBody] CreateRestaurantDto dto)
+    {
+        var id = _restaurantService.CreateRestaurant(dto);
 
-        [HttpDelete("{id}")]
-        public ActionResult DeleteRestaurant([FromRoute] int id)
-        {
-            _restaurantService.DeleteRestaurant(id);
+        return CreatedAtAction(nameof(GetById), new { id }, null);
+    }
 
-            return NoContent();
-        }
+    [HttpDelete("{id}")]
+    public ActionResult DeleteRestaurant([FromRoute] int id)
+    {
+        _restaurantService.DeleteRestaurant(id);
 
-        [HttpPut("{id}")]
-        public ActionResult UpdateRestaurant([FromRoute] int id, [FromBody] UpdateRestaurantDto dto)
-        {
-            _restaurantService.UpdateRestaurant(id, dto);
+        return NoContent();
+    }
 
-            return NoContent();
-        }
+    [HttpPut("{id}")]
+    public ActionResult UpdateRestaurant([FromRoute] int id, [FromBody] UpdateRestaurantDto dto)
+    {
+        _restaurantService.UpdateRestaurant(id, dto);
+
+        return NoContent();
     }
 }
